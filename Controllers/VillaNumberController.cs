@@ -1,5 +1,6 @@
 ﻿using HolidayResortApp.Domain.Entities;
 using HolidayResortApp.Infrastructure.Data;
+using HolidayResortApp.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -22,15 +23,27 @@ namespace HolidayResortApp.Controllers
 
         [HttpGet]
         public IActionResult Create() 
-        { 
-            IEnumerable<SelectListItem> list= _db.Villas.ToList().Select(u=>new SelectListItem
-            { 
-                Text= u.Name,
-                Value= u.Id.ToString()
-            });
+        {
+            VillaNumberVM villaNumberVM = new()
+            {
 
-            ViewData["VillaList"] = list;
-            return View();
+                VillaList = _db.Villas.ToList().Select(u => new SelectListItem
+                {
+                    Text = u.Name,
+                    Value = u.Id.ToString()
+                }),
+            };
+
+
+            //IEnumerable<SelectListItem> list= _db.Villas.ToList().Select(u=>new SelectListItem
+            //{ 
+            //    Text= u.Name,
+            //    Value= u.Id.ToString()
+            //});
+
+            //ViewData["VillaList"] = list;
+            //ViewBag.VillaList = list;
+            return View(villaNumberVM);
 
         }
 
