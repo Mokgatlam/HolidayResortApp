@@ -61,7 +61,7 @@ namespace HolidayResortApp.Controllers
                 _db.SaveChanges();
                 TempData["success"] = "The villa Number has been created Successfully.";
 
-                return RedirectToAction("Index", "VillaNumber");
+                return RedirectToAction(nameof(Index));
 
             }
 
@@ -85,9 +85,7 @@ namespace HolidayResortApp.Controllers
         [HttpGet]
         public IActionResult Update(int villaNumberId)
         {
-            // find the correct villa by Id
-            //Villa? obj= _db.Villas.FirstOrDefault(u=>u.Id==villaId);
-
+            
             VillaNumberVM villaNumberVM = new()
             {
 
@@ -124,7 +122,7 @@ namespace HolidayResortApp.Controllers
                 _db.SaveChanges();
                 TempData["success"] = "The villa Number has been updated Successfully.";
 
-                return RedirectToAction("Index", "VillaNumber");
+                return RedirectToAction(nameof(Index));
 
             }
 
@@ -145,41 +143,56 @@ namespace HolidayResortApp.Controllers
 
 
         [HttpGet]
-        public IActionResult Delete(int villaId)
+        public IActionResult Delete(int villaNumberId)
         {
-            // find the correct villa by Id
-            Villa? obj = _db.Villas.FirstOrDefault(u => u.Id == villaId);
+
+            VillaNumberVM villaNumberVM = new()
+            {
+
+                VillaList = _db.Villas.ToList().Select(u => new SelectListItem
+                {
+                    Text = u.Name,
+                    Value = u.Id.ToString()
+                }),
+                VillaNumber = _db.VillaNumbers.FirstOrDefault(u => u.Villa_Number == villaNumberId)
+            };
 
 
 
-
-            if (obj is null)
+            if (villaNumberVM.VillaNumber == null)
             {
                 return RedirectToAction("Error", "Home");
             }
-            return View(obj);
+            return View(villaNumberVM);
 
         }
 
 
         [HttpPost]
-        public IActionResult Delete(Villa obj)
+        
+        public IActionResult Delete(VillaNumberVM villaNumberVM)
         {
 
-            Villa? objFromDb = _db.Villas.FirstOrDefault(u => u.Id == obj.Id);
+            //ModelState.Remove("Villa");
+            VillaNumber? objFromDb = _db.VillaNumbers.FirstOrDefault(u => u.Villa_Number == villaNumberVM.VillaNumber.Villa_Number);
 
             if (objFromDb is not null)
             {
-                //update the Villa object in database with a helper method
-                _db.Villas.Remove(objFromDb);
+                //update the Villa Number object in database with a helper method
+                _db.VillaNumbers.Remove(objFromDb);
                 _db.SaveChanges();
-                TempData["success"] = "The villa has been deleted Successfully.";
+                TempData["success"] = "The villa Number has been deleted Successfully.";
 
-                return RedirectToAction("Index", "Villa");
+                return RedirectToAction(nameof(Index));
 
             }
-            TempData["error"] = "The villa could not be deleted.";
+            TempData["error"] = "the villa number could not be deleted";
             return View();
+
+
+
+
+           
 
         }
 
