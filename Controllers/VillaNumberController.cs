@@ -3,6 +3,7 @@ using HolidayResortApp.Infrastructure.Data;
 using HolidayResortApp.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace HolidayResortApp.Controllers
 {
@@ -16,8 +17,8 @@ namespace HolidayResortApp.Controllers
             
         }
         public IActionResult Index()
-        {   
-            var villaNumbers = _db.VillaNumbers.ToList();
+        {   // inner join
+            var villaNumbers = _db.VillaNumbers.Include(u=>u.Villa).ToList();
             return View(villaNumbers);
         }
 
@@ -33,7 +34,7 @@ namespace HolidayResortApp.Controllers
                     Value = u.Id.ToString()
                 }),
             };
-
+            return View(villaNumberVM);
 
             //IEnumerable<SelectListItem> list= _db.Villas.ToList().Select(u=>new SelectListItem
             //{ 
@@ -43,64 +44,102 @@ namespace HolidayResortApp.Controllers
 
             //ViewData["VillaList"] = list;
             //ViewBag.VillaList = list;
-            return View(villaNumberVM);
+
 
         }
 
         [HttpPost]
-        public IActionResult Create(VillaNumber obj) 
+        public IActionResult Create(VillaNumberVM obj) 
         {
             //ModelState.Remove("Villa");
-            if (ModelState.IsValid)
+            bool roomNumberExists = _db.VillaNumbers.Any(u => u.Villa_Number == obj.VillaNumber.Villa_Number);
+
+            if (ModelState.IsValid && !roomNumberExists)
             {
                 //create the Villa Number object in database with a helper method
-                _db.VillaNumbers.Add(obj);
+                _db.VillaNumbers.Add(obj.VillaNumber);
                 _db.SaveChanges();
                 TempData["success"] = "The villa Number has been created Successfully.";
 
                 return RedirectToAction("Index", "VillaNumber");
 
             }
-            TempData["error"] = "The villa Number could not be created.";
-            return View();
+
+            if (roomNumberExists)
+            {
+                TempData["error"] = "The villa Number already Exists.";
+            }
+            
+
+            obj.VillaList = _db.Villas.ToList().Select(u => new SelectListItem
+            {
+                Text = u.Name,
+                Value = u.Id.ToString()
+            });
+            
+            return View(obj);
             
         }
 
 
         [HttpGet]
-        public IActionResult Update(int villaId)
+        public IActionResult Update(int villaNumberId)
         {
             // find the correct villa by Id
-            Villa? obj= _db.Villas.FirstOrDefault(u=>u.Id==villaId);
+            //Villa? obj= _db.Villas.FirstOrDefault(u=>u.Id==villaId);
 
-           
+            VillaNumberVM villaNumberVM = new()
+            {
+
+                VillaList = _db.Villas.ToList().Select(u => new SelectListItem
+                {
+                    Text = u.Name,
+                    Value = u.Id.ToString()
+                }),
+                VillaNumber= _db.VillaNumbers.FirstOrDefault(u=>u.Villa_Number==villaNumberId)
+            };
+            
 
 
-            if (obj is null)
+            if (villaNumberVM.VillaNumber == null)
             { 
                 return RedirectToAction("Error","Home");
             }
-            return View(obj);
+            return View(villaNumberVM);
         
         }
 
 
         [HttpPost]
-        public IActionResult Update(Villa obj)
+        public IActionResult Update(VillaNumberVM villaNumberVM)
         {
-            
-            if (ModelState.IsValid && obj.Id>0)
-            {
-                //update the Villa object in database with a helper method
-                _db.Villas.Update(obj);
-                _db.SaveChanges();
-                TempData["success"] = "The villa has been updated Successfully.";
 
-                return RedirectToAction("Index", "Villa");
+            //ModelState.Remove("Villa");
+           // bool roomNumberExists = _db.VillaNumbers.Any(u => u.Villa_Number == obj.VillaNumber.Villa_Number);
+
+            if (ModelState.IsValid)
+            {
+                //update the Villa Number object in database with a helper method
+                _db.VillaNumbers.Update(villaNumberVM.VillaNumber);
+                _db.SaveChanges();
+                TempData["success"] = "The villa Number has been updated Successfully.";
+
+                return RedirectToAction("Index", "VillaNumber");
 
             }
-            TempData["error"] = "The villa could not be updated.";
-            return View();
+
+           
+
+
+            villaNumberVM.VillaList = _db.Villas.ToList().Select(u => new SelectListItem
+            {
+                Text = u.Name,
+                Value = u.Id.ToString()
+            });
+
+            return View(villaNumberVM);
+
+           
 
         }
 
