@@ -9,16 +9,20 @@ namespace HolidayResortApp.Controllers
     {
         // private readonly ApplicationDbContext _db;
 
-        private readonly IVillaRepository _villaRepo;
+        // private readonly IVillaRepository _villaRepo;
 
-        public VillaController(IVillaRepository villaRepo)
+        private readonly IUnitofWork _unitofWork;
+
+        public VillaController(IUnitofWork unitofWork)
         {
-            _villaRepo = villaRepo;
+            _unitofWork= unitofWork;
             
         }
         public IActionResult Index()
-        {   
-            var villas = _villaRepo.GetAll();
+        {
+            // var villas = _villaRepo.GetAll();
+
+            var villas = _unitofWork.Villa.GetAll();
             return View(villas);
         }
 
@@ -40,8 +44,10 @@ namespace HolidayResortApp.Controllers
             if (ModelState.IsValid)
             {
                 //create the Villa object in database with a helper method
-                _villaRepo.Add(obj);
-                _villaRepo.Save();
+                // _villaRepo.Add(obj);
+                _unitofWork.Villa.Add(obj);
+                //_villaRepo.Save();
+                _unitofWork.Save();
                 TempData["success"] = "The villa has been created Successfully.";
 
                 return RedirectToAction("Index", "Villa");
@@ -59,7 +65,7 @@ namespace HolidayResortApp.Controllers
             // find the correct villa by Id
             // Villa? obj= _db.Villas.FirstOrDefault(u=>u.Id==villaId);
 
-            Villa? obj = _villaRepo.Get(u => u.Id == villaId);
+            Villa? obj = _unitofWork.Villa.Get(u => u.Id == villaId);   //_villaRepo.Get(u => u.Id == villaId);
 
 
 
@@ -82,9 +88,9 @@ namespace HolidayResortApp.Controllers
                 //update the Villa object in database with a helper method
                 //_db.Villas.Update(obj);
 
-                _villaRepo.Update(obj);
-                // _db.SaveChanges();
-                _villaRepo.Save();
+                _unitofWork.Villa.Update(obj);                //_villaRepo.Update(obj);
+                                                              // _db.SaveChanges();
+                _unitofWork.Save();                                              //_villaRepo.Save();
                 TempData["success"] = "The villa has been updated Successfully.";
 
                 return RedirectToAction("Index", "Villa");
@@ -102,7 +108,7 @@ namespace HolidayResortApp.Controllers
             // find the correct villa by Id
             //Villa? obj = _db.Villas.FirstOrDefault(u => u.Id == villaId);
             
-            Villa? obj = _villaRepo.Get(u => u.Id == villaId);
+            Villa? obj = _unitofWork.Villa.Get(u => u.Id == villaId);
 
 
 
@@ -122,13 +128,13 @@ namespace HolidayResortApp.Controllers
 
             //Villa? objFromDb = _db.Villas.FirstOrDefault(u => u.Id == obj.Id);
 
-            Villa? objFromDb = _villaRepo.Get(u => u.Id == obj.Id);
+            Villa? objFromDb = _unitofWork.Villa.Get(u => u.Id == obj.Id);
 
             if (objFromDb is not null)
             {
                 //update the Villa object in database with a helper method
-                _villaRepo.Remove(objFromDb);
-                _villaRepo.Save();
+                _unitofWork.Villa.Remove(objFromDb);
+                _unitofWork.Save();
                 TempData["success"] = "The villa has been deleted Successfully.";
 
                 return RedirectToAction("Index", "Villa");

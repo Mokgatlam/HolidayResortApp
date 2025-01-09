@@ -1,4 +1,5 @@
-﻿using HolidayResortApp.Domain.Entities;
+﻿using HolidayResortApp.Application.Common.Interfaces;
+using HolidayResortApp.Domain.Entities;
 using HolidayResortApp.Infrastructure.Data;
 using HolidayResortApp.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -9,16 +10,16 @@ namespace HolidayResortApp.Controllers
 {
     public class VillaNumberController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly IUnitofWork _unitofWork;
 
-        public VillaNumberController(ApplicationDbContext db)
+        public VillaNumberController(IUnitofWork unitofWork)
         {
-            _db = db;
-            
+            _unitofWork = unitofWork;
+
         }
         public IActionResult Index()
         {   // inner join
-            var villaNumbers = _db.VillaNumbers.Include(u=>u.Villa).ToList();
+            var villaNumbers = _unitofWork.VillaNumber.GetAll(includeProperties: "Villa");   //_db.VillaNumbers.Include(u=>u.Villa).ToList();
             return View(villaNumbers);
         }
 
@@ -28,7 +29,7 @@ namespace HolidayResortApp.Controllers
             VillaNumberVM villaNumberVM = new()
             {
 
-                VillaList = _db.Villas.ToList().Select(u => new SelectListItem
+                VillaList = _unitofWork.Villa.GetAll().Select(u => new SelectListItem
                 {
                     Text = u.Name,
                     Value = u.Id.ToString()
@@ -52,13 +53,13 @@ namespace HolidayResortApp.Controllers
         public IActionResult Create(VillaNumberVM obj) 
         {
             //ModelState.Remove("Villa");
-            bool roomNumberExists = _db.VillaNumbers.Any(u => u.Villa_Number == obj.VillaNumber.Villa_Number);
+            bool roomNumberExists = _unitofWork.VillaNumber.Any(u => u.Villa_Number == obj.VillaNumber.Villa_Number);
 
             if (ModelState.IsValid && !roomNumberExists)
             {
                 //create the Villa Number object in database with a helper method
-                _db.VillaNumbers.Add(obj.VillaNumber);
-                _db.SaveChanges();
+                _unitofWork.VillaNumber.Add(obj.VillaNumber);
+                _unitofWork.Save();
                 TempData["success"] = "The villa Number has been created Successfully.";
 
                 return RedirectToAction(nameof(Index));
@@ -71,7 +72,7 @@ namespace HolidayResortApp.Controllers
             }
             
 
-            obj.VillaList = _db.Villas.ToList().Select(u => new SelectListItem
+            obj.VillaList = _unitofWork.Villa.GetAll().Select(u => new SelectListItem
             {
                 Text = u.Name,
                 Value = u.Id.ToString()
@@ -89,12 +90,12 @@ namespace HolidayResortApp.Controllers
             VillaNumberVM villaNumberVM = new()
             {
 
-                VillaList = _db.Villas.ToList().Select(u => new SelectListItem
+                VillaList = _unitofWork.Villa.GetAll().Select(u => new SelectListItem
                 {
                     Text = u.Name,
                     Value = u.Id.ToString()
                 }),
-                VillaNumber= _db.VillaNumbers.FirstOrDefault(u=>u.Villa_Number==villaNumberId)
+                VillaNumber= _unitofWork.VillaNumber.Get(u=>u.Villa_Number==villaNumberId)
             };
             
 
@@ -118,8 +119,8 @@ namespace HolidayResortApp.Controllers
             if (ModelState.IsValid)
             {
                 //update the Villa Number object in database with a helper method
-                _db.VillaNumbers.Update(villaNumberVM.VillaNumber);
-                _db.SaveChanges();
+                _unitofWork.VillaNumber.Update(villaNumberVM.VillaNumber);
+                _unitofWork.Save();
                 TempData["success"] = "The villa Number has been updated Successfully.";
 
                 return RedirectToAction(nameof(Index));
@@ -129,7 +130,7 @@ namespace HolidayResortApp.Controllers
            
 
 
-            villaNumberVM.VillaList = _db.Villas.ToList().Select(u => new SelectListItem
+            villaNumberVM.VillaList = _unitofWork.Villa.GetAll().Select(u => new SelectListItem
             {
                 Text = u.Name,
                 Value = u.Id.ToString()
@@ -149,12 +150,12 @@ namespace HolidayResortApp.Controllers
             VillaNumberVM villaNumberVM = new()
             {
 
-                VillaList = _db.Villas.ToList().Select(u => new SelectListItem
+                VillaList = _unitofWork.Villa.GetAll().Select(u => new SelectListItem
                 {
                     Text = u.Name,
                     Value = u.Id.ToString()
                 }),
-                VillaNumber = _db.VillaNumbers.FirstOrDefault(u => u.Villa_Number == villaNumberId)
+                VillaNumber = _unitofWork.VillaNumber.Get(u => u.Villa_Number == villaNumberId)
             };
 
 
@@ -174,13 +175,13 @@ namespace HolidayResortApp.Controllers
         {
 
             //ModelState.Remove("Villa");
-            VillaNumber? objFromDb = _db.VillaNumbers.FirstOrDefault(u => u.Villa_Number == villaNumberVM.VillaNumber.Villa_Number);
+            VillaNumber? objFromDb = _unitofWork.VillaNumber.Get(u => u.Villa_Number == villaNumberVM.VillaNumber.Villa_Number);
 
             if (objFromDb is not null)
             {
                 //update the Villa Number object in database with a helper method
-                _db.VillaNumbers.Remove(objFromDb);
-                _db.SaveChanges();
+                _unitofWork.VillaNumber.Remove(objFromDb);
+                _unitofWork.Save();
                 TempData["success"] = "The villa Number has been deleted Successfully.";
 
                 return RedirectToAction(nameof(Index));

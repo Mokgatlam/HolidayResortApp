@@ -10,7 +10,8 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<ApplicationDbContext>( option=>
 option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddScoped<IVillaRepository, VillaRepository>();
+//builder.Services.AddScoped<IVillaRepository, VillaRepository>();
+builder.Services.AddScoped<IUnitofWork,UnitOfWork>();
 
 var app = builder.Build();
 
